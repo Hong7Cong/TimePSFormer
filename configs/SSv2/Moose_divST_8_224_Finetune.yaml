@@ -4,7 +4,17 @@ TRAIN:
   BATCH_SIZE: 2
   EVAL_PERIOD: 1
   CHECKPOINT_PERIOD: 1
-  AUTO_RESUME: True
+  AUTO_RESUME: False
+  FINETUNE: True
+  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame/checkpoints/checkpoint_epoch_00009.pyth
+MODEL:
+  MODEL_NAME: MOOSE
+  NUM_CLASSES: 174
+  ARCH: vit
+  LOSS_FUNC: cross_entropy
+  DROPOUT_RATE: 0.5
+  FUSION_MODE: biconcat
+  VISUAL_MODEL: dinov2
 DATA:
   PATH_TO_DATA_DIR: "/data1/hongn/SSv2/labels"
   PATH_PREFIX: "/data1/hongn/SSv2/frames"
@@ -14,9 +24,9 @@ DATA:
   TRAIN_CROP_SIZE: 224
   TEST_CROP_SIZE: 224
   INPUT_CHANNEL_NUM: [3]
-  INV_UNIFORM_SAMPLE: True
-  RANDOM_FLIP: False
-  REVERSE_INPUT_CHANNEL: True
+  # INV_UNIFORM_SAMPLE: True
+  # RANDOM_FLIP: False
+  # REVERSE_INPUT_CHANNEL: True
 TIMESFORMER:
   ATTENTION_TYPE: 'divided_space_time'
 SOLVER:
@@ -24,21 +34,13 @@ SOLVER:
   LR_POLICY: steps_with_relative_lrs
   STEPS: [0, 11, 14]
   LRS: [1, 0.1, 0.01]
-  MAX_EPOCH: 15
+  MAX_EPOCH: 21
   MOMENTUM: 0.9
   WEIGHT_DECAY: 1e-4
   OPTIMIZING_METHOD: sgd
 OUTPUT_DIR: ./checkpoints_ssv2/moose_biconcat_dinov2_8frame/
-MODEL:
-  MODEL_NAME: MOOSE
-  NUM_CLASSES: 174
-  ARCH: vit
-  LOSS_FUNC: cross_entropy
-  DROPOUT_RATE: 0.5
-  FUSION_MODE: biconcat
-  VISUAL_MODEL: dinov2
 TEST:
-  ENABLE: True
+  ENABLE: False
   DATASET: ssv2
   BATCH_SIZE: 2
   NUM_ENSEMBLE_VIEWS: 1

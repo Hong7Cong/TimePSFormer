@@ -40,7 +40,7 @@ TEST:
   BATCH_SIZE: 1
   NUM_ENSEMBLE_VIEWS: 1
   NUM_SPATIAL_CROPS: 3
-  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame_maskarrow/checkpoints/checkpoint_epoch_00008.pyth
+  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame_maskarrow/checkpoints/checkpoint_epoch_00011.pyth
 DATA_LOADER:
   NUM_WORKERS: 4
   PIN_MEMORY: True

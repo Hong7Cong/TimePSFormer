@@ -667,6 +667,7 @@ parser.add_argument('--alternate_corr', action='store_true', help='use efficent 
 raft_args = parser.parse_args(['--model', '/data2/hongn/RAFT/models/raft-things.pth', 
                         '--path', '/data2/hongn/RAFT/demo-frames/care'])
 # from timesformer.models.moose import BidirectionalCrossAttention
+from mamba_ssm import Mamba
 
 @MODEL_REGISTRY.register()
 class MOOSE(nn.Module):
@@ -675,6 +676,8 @@ class MOOSE(nn.Module):
         self.pretrained=False
         patch_size = 14 if(cfg.MODEL.VISUAL_MODEL == 'dinov2') else 16
         self.fusion_mode = cfg.MODEL.FUSION_MODE #"concat" # can be [concat, ofattention, biattention]
+        self.st_masking = cfg.MODEL.ST_MASKING
+        self.time_aggregation = cfg.MODEL.TIME_AGGREGATION
         # self.model = MOOSE(raft_args, raft_args, num_classes=cfg.MODEL.NUM_CLASSES)
         # self.crossatt = CustomAttentionWithResidual(embed_size = 768)
         with torch.no_grad():
@@ -719,12 +722,28 @@ class MOOSE(nn.Module):
                 context_dim = motion_dim
             )
 
+        if(self.time_aggregation == 'mamba'):
+            self.mamba = Mamba(
+                # This module uses roughly 3 * expand * d_model^2 parameters
+                d_model=fc_dim, # Model dimension d_model
+                d_state=16,  # SSM state expansion factor
+                d_conv=4,    # Local convolution width
+                expand=2,    # Block expansion factor
+                device=torch.cuda.current_device()
+            )
+            for p in self.mamba.parameters():
+                p.requires_grad = True
+        elif(self.time_aggregation == 'causal') :
+            self.causal = CausalSelfAttention(fc_dim, 3, 9*224)
+
+
     def forward(self, x):
         # assert False, "self.fusion_mode = onevisualmotion"
         with torch.no_grad():
             visual_embeddings = self.moose_encoder.visual_forward(x)[:, :-1, :] # [b, t, p+1, d] Discard the last frame
             b = visual_embeddings.shape[0]
             t = visual_embeddings.shape[1]
+            p = visual_embeddings.shape[2]
             visual_embeddings = rearrange(visual_embeddings, 'b t p d -> (b t) p d' ,b=b, t=t) 
             if(self.fusion_mode != 'space_only'):
                 flow_low = self.moose_encoder.motion_forward(x) # [b, t, c, w, h]
@@ -749,7 +768,8 @@ class MOOSE(nn.Module):
                                     visual_embeddings,
                                     motion_embeddings,
                                     mask = self.visual_mask.cuda(),
-                                    context_mask = self.motion_mask.cuda()
+                                    context_mask = self.motion_mask.cuda(),
+                                    matrix_mask = self.st_masking
                                 )
             video_embeddings = self.mlp(self.norm2(visual_embeddings))
         elif(self.fusion_mode == "viattention"):
@@ -757,7 +777,8 @@ class MOOSE(nn.Module):
                                     motion_embeddings,
                                     visual_embeddings,
                                     mask = self.visual_mask.cuda(),
-                                    context_mask = self.motion_mask.cuda()
+                                    context_mask = self.motion_mask.cuda(),
+                                    matrix_mask = self.st_masking
                                 )
             video_embeddings = self.mlp(self.norm2(motion_embeddings))
         elif(self.fusion_mode == "biconcat"):
@@ -766,7 +787,7 @@ class MOOSE(nn.Module):
                                     motion_embeddings,
                                     mask = self.visual_mask.cuda(),
                                     context_mask = self.motion_mask.cuda(),
-                                    matrix_mask = "arrow"
+                                    matrix_mask = self.st_masking
                                 )
             video_embeddings = torch.concat((visual_embeddings, motion_embeddings),dim=2)
             video_embeddings = self.mlp(self.norm2(video_embeddings))
@@ -777,14 +798,46 @@ class MOOSE(nn.Module):
             video_embeddings = self.mlp(self.norm2(video_embeddings))
         elif(self.fusion_mode == "space_only"):
             video_embeddings = visual_embeddings
+        elif(self.fusion_mode == "ofseq"):
+            visual_embeddings = rearrange(visual_embeddings, '(b t) p d -> b t p d' ,b=b, t=t) 
+            motion_embeddings = rearrange(motion_embeddings, '(b t) p d -> b t p d' ,b=b, t=t)
+            visual_temp = visual_embeddings[:,0,:]
+            motion_temp = motion_embeddings[:,0,:]
+            for i in range(t): 
+                visual_temp, motion_temp = self.joint_cross_attn(
+                            visual_temp,
+                            motion_temp,
+                            mask = self.visual_mask.cuda(),
+                            context_mask = self.motion_mask.cuda(),
+                            matrix_mask = self.st_masking
+                        )
         else:
             assert False, f"No fusion_mode {self.fusion_mode} found!"
 
         video_embeddings = rearrange(video_embeddings, '(b t) p d -> b t p d' ,b=b, t=t) 
-        video_embeddings = torch.mean(video_embeddings, dim=1)
+        if(self.time_aggregation == 'mean'):
+            video_embeddings = torch.mean(video_embeddings, dim=1)
+            x = video_embeddings[:, 0, :] # Get the cls_token
+        elif(self.time_aggregation == 'mamba'):
+            out = self.mamba(video_embeddings[:, :, 0, :])
+            x = out[:, -1, :]
+            # x = torch.mean(out, dim=1)
+            # print(x.shape)
+            # assert False, "get to MAMBA"
+        elif(self.time_aggregation == 'causal'):
+            video_embeddings = rearrange(video_embeddings, 'b t p d -> (b p) t d' ,b=b, t=t)
+            res = self.causal(video_embeddings)
+            video_embeddings = video_embeddings + res
+            video_embeddings = rearrange(video_embeddings, '(b p) t d -> b t p d' ,b=b, t=t, p=p)
+            # print(video_embeddings.shape)
+            x = video_embeddings[:, -1, 0, :] # Get the cls_token
+            # print(x.shape)
+            # assert False, "get to CAUSAL"
+        else:
+            assert False, f"No time_aggregation {self.time_aggregation} found!"
         # print(video_embeddings.shape)
         # assert False
-        x = video_embeddings[:, 0, :] # Get the cls_token
+
         x = self.head(x)
         return x
     

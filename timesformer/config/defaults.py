@@ -208,8 +208,9 @@ _C.MODEL.ARCH = "slowfast"
 
 # Multimodal fusion mode
 _C.MODEL.FUSION_MODE = "ofattention"
-_C.MODEL.VISUAL_MODEL = "dino"
-
+_C.MODEL.VISUAL_MODEL = "dinov2"
+_C.MODEL.ST_MASKING = "arrow"
+_C.MODEL.TIME_AGGREGATION = "mean"
 # Model name
 _C.MODEL.MODEL_NAME = "SlowFast"
 
@@ -490,16 +491,16 @@ _C.DETECTION.ROI_XFORM_RESOLUTION = 7
 _C.AVA = CfgNode()
 
 # Directory path of frames.
-_C.AVA.FRAME_DIR = "/mnt/fair-flash3-east/ava_trainval_frames.img/"
+_C.AVA.FRAME_DIR = "/data1/hongn/ava/frames"
 
 # Directory path for files of frame lists.
 _C.AVA.FRAME_LIST_DIR = (
-    "/mnt/vol/gfsai-flash3-east/ai-group/users/haoqifan/ava/frame_list/"
+    "/data1/hongn/ava/frame_lists"
 )
 
 # Directory path for annotation files.
 _C.AVA.ANNOTATION_DIR = (
-    "/mnt/vol/gfsai-flash3-east/ai-group/users/haoqifan/ava/frame_list/"
+    "/data1/hongn/ava/frame_lists"
 )
 
 # Filenames of training samples list files.
@@ -511,11 +512,11 @@ _C.AVA.TEST_LISTS = ["val.csv"]
 # Filenames of box list files for training. Note that we assume files which
 # contains predicted boxes will have a suffix "predicted_boxes" in the
 # filename.
-_C.AVA.TRAIN_GT_BOX_LISTS = ["ava_train_v2.2.csv"]
+_C.AVA.TRAIN_GT_BOX_LISTS = ["/data1/hongn/ava/annotations/ava_train_v2.1.csv"]
 _C.AVA.TRAIN_PREDICT_BOX_LISTS = []
 
 # Filenames of box list files for test.
-_C.AVA.TEST_PREDICT_BOX_LISTS = ["ava_val_predicted_boxes.csv"]
+_C.AVA.TEST_PREDICT_BOX_LISTS = ["/data1/hongn/ava/annotations/ava_val_predicted_boxes.csv"]
 
 # This option controls the score threshold for the predicted boxes to use.
 _C.AVA.DETECTION_SCORE_THRESH = 0.9
@@ -548,13 +549,13 @@ _C.AVA.TEST_FORCE_FLIP = False
 _C.AVA.FULL_TEST_ON_VAL = False
 
 # The name of the file to the ava label map.
-_C.AVA.LABEL_MAP_FILE = "ava_action_list_v2.2_for_activitynet_2019.pbtxt"
+_C.AVA.LABEL_MAP_FILE = "/data1/hongn/ava/annotations/ava_action_list_v2.1_for_activitynet_2018.pbtxt"#"/data1/hongn/ava/annotations/ava_action_list_v2.2_for_activitynet.pbtxt" #"ava_action_list_v2.2_for_activitynet_2019.pbtxt"
 
 # The name of the file to the ava exclusion.
-_C.AVA.EXCLUSION_FILE = "ava_val_excluded_timestamps_v2.2.csv"
+_C.AVA.EXCLUSION_FILE = "/data1/hongn/ava/annotations/ava_train_excluded_timestamps_v2.1.csv"
 
 # The name of the file to the ava groundtruth.
-_C.AVA.GROUNDTRUTH_FILE = "ava_val_v2.2.csv"
+_C.AVA.GROUNDTRUTH_FILE = "/data1/hongn/ava/annotations/ava_val_v2.1.csv"
 
 # Backend to process image, includes `pytorch` and `cv2`.
 _C.AVA.IMG_PROC_BACKEND = "cv2"

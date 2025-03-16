@@ -144,3 +144,7 @@ cython_debug/
 
 *.mp4
 checkpoints/
+checkpoints_haa500/
+checkpoints_ssv2/
+causal-conv1d/
+mamba/
