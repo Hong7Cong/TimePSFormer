@@ -6,7 +6,7 @@ TRAIN:
   CHECKPOINT_PERIOD: 1
   AUTO_RESUME: False
   TPU_ENABLE: False
-OUTPUT_DIR: ./checkpoints/moose_biconcat_sapiens_8frame_1024/
+OUTPUT_DIR: ./checkpoints/moose_biconcat_sapiens_8frame_1024_maskarrow_timemean/
 MODEL:
   MODEL_NAME: MOOSE
   NUM_CLASSES: 400
@@ -15,6 +15,8 @@ MODEL:
   DROPOUT_RATE: 0.5
   FUSION_MODE: biconcat
   VISUAL_MODEL: sapiens
+  TIME_AGGREGATION: mean
+  ST_MASKING: arrow
 DATA:
   PATH_TO_DATA_DIR: /data1/hongn/kinetics-dataset/k400
   NUM_FRAMES: 2

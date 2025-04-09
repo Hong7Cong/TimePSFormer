@@ -569,6 +569,9 @@ class MOOSE_Encoder(nn.Module):
         '''
             Inputs should have shape of (b, c, t, w, h) Example: (4, 3, 8, 224, 224)
         '''
+        if isinstance(x, (list,)):
+            x = x[0]
+
         assert len(x.shape) == 5, "Input should have len = 5, represent (b, c, t, w, h)"
         b = x.shape[0]
         t = x.shape[2]
@@ -625,7 +628,11 @@ class MOOSE_Encoder(nn.Module):
         '''
             Inputs should have shape of (b, c, t, w, h) Example: (4, 3, 8, 224, 224)
         '''
-        assert len(inputs.shape) == 5, "Input should have len = 5, represent (b, c, t, w, h)"
+        if isinstance(inputs, (list,)):
+            inputs = inputs[0]
+
+        # print(inputs)
+        assert len(inputs.shape) == 5, f"Input should have len = 5, represent (b, c, t, w, h) but {inputs.shape}"
         b = inputs.shape[0]
         t = inputs.shape[2]
         if(self.cfg.MODEL.VISUAL_MODEL == "dino"):

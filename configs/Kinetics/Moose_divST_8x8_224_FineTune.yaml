@@ -1,34 +1,32 @@
 TRAIN:
   ENABLE: True
-  DATASET: ssv2
-  BATCH_SIZE: 224
+  DATASET: kinetics
+  BATCH_SIZE: 192
   EVAL_PERIOD: 1
   CHECKPOINT_PERIOD: 1
-  AUTO_RESUME: False
-  FINETUNE: True
-  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame_maskarrow/checkpoints/checkpoint_epoch_00015.pyth
+  AUTO_RESUME: True
+  TPU_ENABLE: False
+  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame_maskarrow_timecausal/checkpoints/checkpoint_epoch_00021.pyth
+OUTPUT_DIR: ./checkpoints/moose_biconcat_dinov2_8frame_maskarrow_timecausal/
 MODEL:
   MODEL_NAME: MOOSE
-  NUM_CLASSES: 174
+  NUM_CLASSES: 400
   ARCH: vit
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5
   FUSION_MODE: biconcat
   VISUAL_MODEL: dinov2
-  TIME_AGGREGATION: mean
+  TIME_AGGREGATION: causal
   ST_MASKING: arrow
 DATA:
-  PATH_TO_DATA_DIR: "/data1/hongn/SSv2/labels"
-  PATH_PREFIX: "/data1/hongn/SSv2/frames"
+  PATH_TO_DATA_DIR: /data1/hongn/kinetics-dataset/k400
   NUM_FRAMES: 9
   SAMPLING_RATE: 8
   TRAIN_JITTER_SCALES: [256, 320]
   TRAIN_CROP_SIZE: 224
   TEST_CROP_SIZE: 224
   INPUT_CHANNEL_NUM: [3]
-  # INV_UNIFORM_SAMPLE: True
-  # RANDOM_FLIP: False
-  # REVERSE_INPUT_CHANNEL: True
+  PATH_LABEL_SEPARATOR: ","
 TIMESFORMER:
   ATTENTION_TYPE: 'divided_space_time'
 SOLVER:
@@ -36,21 +34,13 @@ SOLVER:
   LR_POLICY: steps_with_relative_lrs
   STEPS: [0, 11, 14]
   LRS: [1, 0.1, 0.01]
-  MAX_EPOCH: 21
+  MAX_EPOCH: 50
   MOMENTUM: 0.9
   WEIGHT_DECAY: 1e-4
   OPTIMIZING_METHOD: sgd
-OUTPUT_DIR: ./checkpoints_ssv2/moose_biconcat_dinov2_8frame/
-TEST:
-  ENABLE: False
-  DATASET: ssv2
-  BATCH_SIZE: 2
-  NUM_ENSEMBLE_VIEWS: 1
-  NUM_SPATIAL_CROPS: 3
 DATA_LOADER:
   NUM_WORKERS: 4
   PIN_MEMORY: True
 NUM_GPUS: 1
 NUM_SHARDS: 1
 RNG_SEED: 0
-

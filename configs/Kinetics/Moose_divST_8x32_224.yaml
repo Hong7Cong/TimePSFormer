@@ -1,19 +1,19 @@
 TRAIN:
   ENABLE: True
   DATASET: kinetics
-  BATCH_SIZE: 192
+  BATCH_SIZE: 224
   EVAL_PERIOD: 1
   CHECKPOINT_PERIOD: 1
   AUTO_RESUME: False
   TPU_ENABLE: False
-OUTPUT_DIR: ./checkpoints/moose_biconcat_dinov2_8frame_maskarrow_timecausal/
+OUTPUT_DIR: ./checkpoints/moose_viattention_dinov2_8frame_maskarrow_timecausal/
 MODEL:
   MODEL_NAME: MOOSE
   NUM_CLASSES: 400
   ARCH: vit
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5
-  FUSION_MODE: biconcat
+  FUSION_MODE: viattention
   VISUAL_MODEL: dinov2
   TIME_AGGREGATION: causal
   ST_MASKING: arrow

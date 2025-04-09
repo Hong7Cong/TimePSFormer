@@ -15,6 +15,9 @@ _C.BN = CfgNode()
 # Precise BN stats.
 _C.BN.USE_PRECISE_STATS = False
 
+# The name of the current task; e.g. "ssl"/"sl" for (self)supervised learning
+_C.TASK = ""
+
 # Number of samples use to compute precise bn.
 _C.BN.NUM_BATCHES_PRECISE = 200
 
@@ -72,8 +75,18 @@ _C.TRAIN.CHECKPOINT_INFLATE = False
 # If True, reset epochs when loading checkpoint.
 _C.TRAIN.CHECKPOINT_EPOCH_RESET = False
 
+_C.TRAIN.MIXED_PRECISION = False  # ("backbone.",)
+
 # If set, clear all layer names according to the pattern provided.
 _C.TRAIN.CHECKPOINT_CLEAR_NAME_PATTERN = ()  # ("backbone.",)
+
+_C.VIS_MASK = CfgNode()
+_C.VIS_MASK.ENABLE = False
+
+_C.MASK = CfgNode()
+
+# Whether to enable Masked style pretraining.
+_C.MASK.ENABLE = False
 
 # ---------------------------------------------------------------------------- #
 # Testing options
@@ -221,7 +234,7 @@ _C.MODEL.NUM_CLASSES = 400
 _C.MODEL.LOSS_FUNC = "cross_entropy"
 
 # Model architectures that has one single pathway.
-_C.MODEL.SINGLE_PATHWAY_ARCH = ["c2d", "i3d", "slow", "x3d"]
+_C.MODEL.SINGLE_PATHWAY_ARCH = ["c2d", "i3d", "slow", "x3d", "vit"]
 
 # Model architectures that has multiple pathways.
 _C.MODEL.MULTI_PATHWAY_ARCH = ["slowfast"]
@@ -238,6 +251,8 @@ _C.MODEL.FC_INIT_STD = 0.01
 # Activation layer for the output head.
 _C.MODEL.HEAD_ACT = "softmax"
 
+# If True, frozen batch norm stats during training.
+_C.MODEL.FROZEN_BN = False
 
 # -----------------------------------------------------------------------------
 # SlowFast options
@@ -500,7 +515,7 @@ _C.AVA.FRAME_LIST_DIR = (
 
 # Directory path for annotation files.
 _C.AVA.ANNOTATION_DIR = (
-    "/data1/hongn/ava/frame_lists"
+    "/data1/hongn/ava/annotations"
 )
 
 # Filenames of training samples list files.
@@ -512,11 +527,11 @@ _C.AVA.TEST_LISTS = ["val.csv"]
 # Filenames of box list files for training. Note that we assume files which
 # contains predicted boxes will have a suffix "predicted_boxes" in the
 # filename.
-_C.AVA.TRAIN_GT_BOX_LISTS = ["/data1/hongn/ava/annotations/ava_train_v2.1.csv"]
-_C.AVA.TRAIN_PREDICT_BOX_LISTS = []
+_C.AVA.TRAIN_GT_BOX_LISTS = ["ava_train_v2.1.csv"]
+_C.AVA.TRAIN_PREDICT_BOX_LISTS = ["ava_train_predicted_boxes.csv"]
 
 # Filenames of box list files for test.
-_C.AVA.TEST_PREDICT_BOX_LISTS = ["/data1/hongn/ava/annotations/ava_val_predicted_boxes.csv"]
+_C.AVA.TEST_PREDICT_BOX_LISTS = ["ava_val_predicted_boxes.csv"]
 
 # This option controls the score threshold for the predicted boxes to use.
 _C.AVA.DETECTION_SCORE_THRESH = 0.9
