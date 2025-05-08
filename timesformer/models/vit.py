@@ -543,6 +543,9 @@ class MOOSE_Encoder(nn.Module):
                 p.requires_grad = False   
         motion_model.load_state_dict(torch.load(args.model))
         motion_model = motion_model.module
+        if(self.cfg.MODEL.MOTION_MODEL == "opencv"):
+            import cv2
+            motion_model = cv2.optflow.calcOpticalFlowSparseToDense
         return motion_model
 
     def _init_visual_model(self):
@@ -599,12 +602,16 @@ class MOOSE_Encoder(nn.Module):
         #         flow_embs_batches.append(flow_embs)
         #     ret = torch.stack(flow_embs_batches)
         # return ret
+        
         with torch.no_grad():
             x = rearrange(x, 'b c t w h -> (b t) c w h', b=b, t=t)
             x = denomalizing_img(x)
             if(self.cfg.MODEL.VISUAL_MODEL == "sapiens"):
                 x = Resize(224)(x)
             x = rearrange(x, '(b t) c w h -> b t c w h', b=b, t=t)
+            if(self.cfg.MODEL.MOTION_MODEL == "opencv"):
+               ret = extract_optical_flow_sparse_to_dense_video(x)
+               return ret
             # print(f'b = {b}, t = {t}')
             # flow_embs_batches = []
             flow_embs = []
@@ -614,7 +621,6 @@ class MOOSE_Encoder(nn.Module):
                 # print(image1.shape)
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
-
                 flow_low, flow_up = self.motion_model(image1, image2, iters=1, test_mode=True)
                 if(self.cfg.MODEL.VISUAL_MODEL == "sapiens"):
                     flow_up = Resize(1024)(flow_up)
@@ -867,3 +873,53 @@ def get_sapiens():
     # inferencer = FeatureExtractor(model=config, pretrained=checkpoint, device='cuda', backbone=dict(out_indices=(0, 1, 2, 3, 4)))
     inferencer = get_model(model=config, pretrained=True)
     return inferencer
+
+
+def extract_optical_flow_sparse_to_dense_video(video_batch):
+    """
+    Compute optical flow (SparseToDense) between consecutive frames in a batch of videos.
+
+    Args:
+        video_batch (torch.Tensor): Tensor of shape (B, T, 3, H, W)
+
+    Returns:
+        torch.Tensor: Optical flow tensor of shape (B, T-1, 2, H, W)
+    """
+    if video_batch.ndim != 5 or video_batch.shape[2] != 3:
+        raise ValueError(f"Expected input shape (B, T, 3, H, W), but got {video_batch.shape}")
+    
+    B, T, C, H, W = video_batch.shape
+    flow_results = []
+
+    for b in range(B):
+        flows = []
+        for t in range(T - 1):
+            img1 = video_batch[b, t]
+            img2 = video_batch[b, t + 1]
+
+            # Convert to uint8 if needed
+            if img1.dtype == torch.float32 or img1.max() <= 1.0:
+                img1 = (img1 * 255).clamp(0, 255).to(torch.uint8)
+                img2 = (img2 * 255).clamp(0, 255).to(torch.uint8)
+
+            # Convert to HWC numpy
+            img1_np = img1.cpu().numpy().transpose(1, 2, 0)
+            img2_np = img2.cpu().numpy().transpose(1, 2, 0)
+
+            # Convert to grayscale
+            gray1 = cv2.cvtColor(img1_np, cv2.COLOR_RGB2GRAY)
+            gray2 = cv2.cvtColor(img2_np, cv2.COLOR_RGB2GRAY)
+
+            # Try computing flow, fallback to zeros if it fails
+            try:
+                flow = cv2.optflow.calcOpticalFlowSparseToDense(gray1, gray2)
+            except cv2.error:
+                flow = np.zeros((H, W, 2), dtype=np.float32)
+
+            flow_tensor = torch.from_numpy(flow).permute(2, 0, 1)  # (2, H, W)
+            flows.append(flow_tensor)
+        
+        # Stack flows along time dimension
+        flow_results.append(torch.stack(flows))  # (T-1, 2, H, W)
+
+    return torch.stack(flow_results)  # (B, T-1, 2, H, W)

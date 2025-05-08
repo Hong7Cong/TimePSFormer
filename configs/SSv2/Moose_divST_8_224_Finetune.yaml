@@ -1,21 +1,21 @@
 TRAIN:
   ENABLE: True
   DATASET: ssv2
-  BATCH_SIZE: 224
+  BATCH_SIZE: 96
   EVAL_PERIOD: 1
   CHECKPOINT_PERIOD: 1
   AUTO_RESUME: False
   FINETUNE: True
-  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints/moose_biconcat_dinov2_8frame_maskarrow/checkpoints/checkpoint_epoch_00015.pyth
+  CHECKPOINT_FILE_PATH: /data2/hongn/TimePSFormer/checkpoints_ssv2/moose_viattention_dinov2_8frame_maskarrow_timecausal/checkpoints/checkpoint_epoch_00001.pyth
 MODEL:
   MODEL_NAME: MOOSE
   NUM_CLASSES: 174
   ARCH: vit
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5
-  FUSION_MODE: biconcat
+  FUSION_MODE: viattention
   VISUAL_MODEL: dinov2
-  TIME_AGGREGATION: mean
+  TIME_AGGREGATION: causal
   ST_MASKING: arrow
 DATA:
   PATH_TO_DATA_DIR: "/data1/hongn/SSv2/labels"
@@ -36,11 +36,11 @@ SOLVER:
   LR_POLICY: steps_with_relative_lrs
   STEPS: [0, 11, 14]
   LRS: [1, 0.1, 0.01]
-  MAX_EPOCH: 21
+  MAX_EPOCH: 20
   MOMENTUM: 0.9
   WEIGHT_DECAY: 1e-4
   OPTIMIZING_METHOD: sgd
-OUTPUT_DIR: ./checkpoints_ssv2/moose_biconcat_dinov2_8frame/
+OUTPUT_DIR: ./checkpoints_ssv2/moose_viattention_dinov2_8frame_maskarrow_timecausal/
 TEST:
   ENABLE: False
   DATASET: ssv2

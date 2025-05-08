@@ -1,0 +1,51 @@
+TRAIN:
+  ENABLE: True
+  DATASET: rtmri75s
+  BATCH_SIZE: 1
+  EVAL_PERIOD: 1
+  CHECKPOINT_PERIOD: 3
+  AUTO_RESUME: False
+DATA:
+  PATH_TO_DATA_DIR: /data1/hongn/rtmri75s_processed
+  NUM_FRAMES: 4
+  SAMPLING_RATE: 4
+  TARGET_FPS: 50
+  TRAIN_JITTER_SCALES: [256, 320]
+  TRAIN_CROP_SIZE: 224
+  TEST_CROP_SIZE: 224
+  INPUT_CHANNEL_NUM: [3]
+  PATH_LABEL_SEPARATOR: ","
+  RANDOM_FLIP: False
+  MEAN: [0.25, 0.25, 0.25]
+  STD: [0.225, 0.225, 0.225]
+# TIMESFORMER:
+#   ATTENTION_TYPE: 'space_only'
+#   PRETRAINED_MODEL: /data2/hongn/TimeSformer/checkpoints/checkpoint_epoch_00015.pyth
+SOLVER:
+  BASE_LR: 0.005
+  LR_POLICY: steps_with_relative_lrs
+  STEPS: [0, 11, 14]
+  LRS: [1, 0.1, 0.01]
+  MAX_EPOCH: 20
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 1e-4
+  OPTIMIZING_METHOD: sgd
+
+MODEL:
+  MODEL_NAME: MOOSE
+  NUM_CLASSES: 392
+  ARCH: vit
+  LOSS_FUNC: cross_entropy
+  DROPOUT_RATE: 0.5
+  FUSION_MODE: viattention
+  VISUAL_MODEL: dinov2
+  TIME_AGGREGATION: causal
+  ST_MASKING: arrow
+
+DATA_LOADER:
+  NUM_WORKERS: 4
+  PIN_MEMORY: True
+NUM_GPUS: 1
+NUM_SHARDS: 1
+RNG_SEED: 0
+OUTPUT_DIR: ./checkpoints_rtmri/moose_viattention_dinov2_4frame_maskarrow_timecausal/

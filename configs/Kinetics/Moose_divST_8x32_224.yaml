@@ -1,20 +1,22 @@
 TRAIN:
   ENABLE: True
   DATASET: kinetics
-  BATCH_SIZE: 224
+  BATCH_SIZE: 1
   EVAL_PERIOD: 1
   CHECKPOINT_PERIOD: 1
   AUTO_RESUME: False
   TPU_ENABLE: False
-OUTPUT_DIR: ./checkpoints/moose_viattention_dinov2_8frame_maskarrow_timecausal/
+  # CHECKPOINT_FILE_PATH: ./checkpoints/moose_viattention_dinov2_8frame_maskarrow_timecausal/checkpoints/checkpoint_epoch_00004.pyth
+OUTPUT_DIR: ./checkpoints/moose_ofattention_dinov2_8frame_maskarrow_timecausal_test/
 MODEL:
   MODEL_NAME: MOOSE
   NUM_CLASSES: 400
   ARCH: vit
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5
-  FUSION_MODE: viattention
+  FUSION_MODE: ofattention
   VISUAL_MODEL: dinov2
+  MOTION_MODEL: opencv
   TIME_AGGREGATION: causal
   ST_MASKING: arrow
 DATA:
@@ -33,7 +35,7 @@ SOLVER:
   LR_POLICY: steps_with_relative_lrs
   STEPS: [0, 11, 14]
   LRS: [1, 0.1, 0.01]
-  MAX_EPOCH: 21
+  MAX_EPOCH: 20
   MOMENTUM: 0.9
   WEIGHT_DECAY: 1e-4
   OPTIMIZING_METHOD: sgd

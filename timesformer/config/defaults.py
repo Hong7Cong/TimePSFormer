@@ -222,6 +222,7 @@ _C.MODEL.ARCH = "slowfast"
 # Multimodal fusion mode
 _C.MODEL.FUSION_MODE = "ofattention"
 _C.MODEL.VISUAL_MODEL = "dinov2"
+_C.MODEL.MOTION_MODEL = "raft"
 _C.MODEL.ST_MASKING = "arrow"
 _C.MODEL.TIME_AGGREGATION = "mean"
 # Model name
